@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
-import TimelinesChart, { Group } from 'timelines-chart';
+import TimelinesChart, { Group, Val } from 'timelines-chart';
+import { scaleOrdinal } from 'd3';
 import ParseData from './ParseData.tsx';
 
 // import getRandomData from './randomData';
@@ -14,7 +15,11 @@ const TimelineComponent = () => {
 
   useEffect(() => {
     if (timelineRef.current) {
-      const chart = new TimelinesChart(timelineRef.current).data(data);
+      const colourScale = scaleOrdinal<Val, string>()
+        .domain(['1', '3', '12', '15', '48']) // Your keys
+        .range(['blue', 'red', 'yellow', 'orange', 'green'])
+        .unknown('black');
+      const chart = new TimelinesChart(timelineRef.current).zQualitative(true).zColorScale(colourScale).data(data);
       chart.refresh();
     }
   }, [data]);

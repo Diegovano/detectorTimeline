@@ -34,7 +34,7 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
           if (colName.includes('DR')) {
             let detectionBegin: Date | null = null;
             const segments: Segment[] = [];
-            csvData.forEach((row, rowIndex) => {
+            csvData.slice(1).forEach((row, rowIndex) => {
               if (row[colIndex] === '1') {
                 if (detectionBegin) throw new Error(`new detection from ${colName} started without previous one ending on row ${rowIndex}`);
                 detectionBegin = convertExcelDateAndFracHourToDate(row[daycol], row[timecol]);
@@ -48,7 +48,18 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
             });
             detectorData.data.push({ label: colName, data: segments });
           } else if (colName.includes('SG')) {
-            // continue
+            let signalStateBegin: Date = convertExcelDateAndFracHourToDate(csvData[1][daycol], csvData[1][timecol]);
+            let previousSignalState: string = '3';
+            const segments: Segment[] = [];
+            csvData.slice(1).forEach((row, _) => {
+              if (row[colIndex] !== '') {
+                const eventDate = convertExcelDateAndFracHourToDate(row[daycol], row[timecol]);
+                segments.push({ timeRange: [signalStateBegin, eventDate], val: previousSignalState }); // if there is no data, assume red (used for initialisation)
+                signalStateBegin = eventDate;
+                previousSignalState = row[colIndex];
+              }
+            });
+            signalData.data.push({ label: colName, data: segments });
           }
         });
 

@@ -20,5 +20,5 @@ export default [
   ...(new FlatCompat({
     baseDirectory: path.dirname(url.fileURLToPath(import.meta.url))
   }).extends('eslint-config-standard')),
-  { rules: { semi: ['error', 'always'], 'no-unused-vars': ['error', { argsIgnorePattern: '^_' }] } }
+  { rules: { semi: ['error', 'always'], '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }] } }
 ];
