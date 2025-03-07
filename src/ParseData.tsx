@@ -1,4 +1,4 @@
-import { ChangeEvent, Dispatch, FC, SetStateAction } from 'react';
+import { ChangeEvent, Dispatch, FC, SetStateAction, useState } from 'react';
 import { Group, Segment } from 'timelines-chart';
 
 function convertExcelDateAndFracHourToDate (excelDay: string, excelHour: string): Date { // Thanks chatgpt
@@ -12,6 +12,8 @@ function convertExcelDateAndFracHourToDate (excelDay: string, excelHour: string)
 }
 
 const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAction<Group[]>>}> = ({ data, setData }) => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const dayColumnName = 'Datum';
   const timeColumnName = 'Uhrzeit';
 
@@ -66,14 +68,17 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
         return [detectorData, signalData] as Group[];
       });
 
-      parsedData.then(groups => setData(groups), err => console.log(`Error occured parsing CSV data: ${err.message}`));
+      parsedData.then(groups => setData(groups), (err: Error) => {
+        setData([]);
+        setErrorMessage(err.message);
+      });
     }
   };
 
   return (
-    <div>
+    <div id="fileUpload">
       <input type="file" accept=".csv" onChange={handleFileChange}/>
-      <span>{data ? 'Valid Data File' : 'Invalid Data File'}</span>
+      <span>{data.length > 0 ? 'Valid Data File' : `Invalid Data File: ${errorMessage}`}</span>
     </div>
   );
 };
