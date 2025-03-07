@@ -43,7 +43,7 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
               } else if (row[colIndex] === '0') {
                 if (detectionBegin === null) console.log(`INFO: Ending detection from ${colName} never started on row ${rowIndex}`);
                 else {
-                  segments.push({ timeRange: [detectionBegin, convertExcelDateAndFracHourToDate(row[daycol], row[timecol])], val: 1 });
+                  segments.push({ timeRange: [detectionBegin, convertExcelDateAndFracHourToDate(row[daycol], row[timecol])], val: '1' });
                   detectionBegin = null;
                 }
               }
