@@ -1,0 +1,19 @@
+#root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-content: flex-start;
+}
+
+#main-title {
+  padding: 2rem;
+  text-align: center;
+}
+
+#content {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  border: 1px solid red;
+}
