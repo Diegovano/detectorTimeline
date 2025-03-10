@@ -33,7 +33,7 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
         if (timecol === -1) throw new Error('Could not find time index');
 
         header.forEach((colName, colIndex) => {
-          if (colName.includes('DR')) {
+          if (colName.includes('DR') || colName.includes('US')) {
             let detectionBegin: Date | null = null;
             const segments: Segment[] = [];
             csvData.slice(1).forEach((row, rowIndex) => {

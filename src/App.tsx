@@ -15,7 +15,11 @@ const TimelineComponent = () => {
         .domain(['1', '3', '12', '15', '48'])
         .range(['blue', 'red', 'yellow', 'orange', 'green'])
         .unknown('black');
-      chartInstance.current = new TimelinesChart(timelineRef.current).zQualitative(true).zColorScale(colourScale).data(data);
+      chartInstance.current = new TimelinesChart(timelineRef.current)
+        .zQualitative(true)
+        .zColorScale(colourScale)
+        .enableAnimations(false)
+        .data(data);
       chartInstance.current.refresh();
     } else if (timelineRef.current && chartInstance.current) {
       chartInstance.current.data(data);
