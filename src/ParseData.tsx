@@ -33,7 +33,7 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
         if (timecol === -1) throw new Error('Could not find time index');
 
         header.forEach((colName, colIndex) => {
-          if (colName.includes('DR') || colName.includes('US')) {
+          if (colName.includes('DR')) {
             let detectionBegin: Date | null = null;
             const segments: Segment[] = [];
             csvData.slice(1).forEach((row, rowIndex) => {
@@ -59,6 +59,17 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
                 segments.push({ timeRange: [signalStateBegin, eventDate], val: previousSignalState }); // if there is no data, assume red (used for initialisation)
                 signalStateBegin = eventDate;
                 previousSignalState = row[colIndex];
+              }
+            });
+            signalData.data.push({ label: colName, data: segments });
+          } else if (colName.includes('US')) {
+            const segments: Segment[] = [];
+            csvData.slice(1).forEach((row, _rowIndex) => {
+              if (row[colIndex] === '1') {
+                const eventDate = convertExcelDateAndFracHourToDate(row[daycol], row[timecol]);
+                const nextSecond = new Date(eventDate);
+                nextSecond.setSeconds(eventDate.getSeconds() + 1);
+                segments.push({ timeRange: [eventDate, nextSecond], val: '2' });
               }
             });
             signalData.data.push({ label: colName, data: segments });
