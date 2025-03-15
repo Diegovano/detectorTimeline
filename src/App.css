@@ -20,8 +20,29 @@
 
 #fileUpload {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding-bottom: 25px;
+  justify-content: stretch;
+  padding: 0 25px 25px;
 }
+
+#uploadAndConfirm {
+  display: flex;
+  flex-direction: column;
+}
+
+#uploadAndConfirm > * {
+  padding: 2px;
+}
+
+.checkbox {
+  padding: 2px;
+}
+
+.columnSelection {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 1fr 1fr 1fr;
+  justify-content: center;
+}
+ .columnSelection > * {
+  border: 1px black solid;
+ }

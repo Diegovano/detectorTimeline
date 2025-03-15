@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, MutableRefObject } from 'react';
 import './App.css';
 import TimelinesChart, { Group, Val } from 'timelines-chart';
 import { scaleOrdinal } from 'd3';
-import ParseData from './ParseData.tsx';
+import DataEntry from './dataEntry.tsx';
 
 const TimelineComponent = () => {
   const [data, setData] = useState<Group[]>([]);
@@ -31,7 +31,7 @@ const TimelineComponent = () => {
   }, [data]);
   return (
     <div>
-      <ParseData data={data} setData={setData}></ParseData>
+      <DataEntry data={data} setData={setData}></DataEntry>
       <div ref={timelineRef}></div>
     </div>
   );
