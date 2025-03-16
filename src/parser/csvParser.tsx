@@ -5,14 +5,14 @@ class CSVParser extends Parser {
   readonly dayColumnName = 'Datum';
   readonly timeColumnName = 'Uhrzeit';
 
-  getAllLabels () {
+  extractLabels () {
     const colNames = this.input.split('\n')[0].split(',');
     const nonDataLabels = ['Datum', 'Uhrzeit', 'Time', 'ms'];
 
     return colNames.filter(colName => !nonDataLabels.includes(colName));
   }
 
-  parse (requestedLabels: string[] | null = null) {
+  parse (requestedLabels: string[] = this.allLabels) {
     this.detectorData.data = [];
     this.signalData.data = [];
     this.otherData.data = [];
@@ -26,7 +26,7 @@ class CSVParser extends Parser {
     if (timecol === -1) throw new Error('Could not find time index');
 
     header.forEach((colName, colIndex) => {
-      if (requestedLabels && !requestedLabels.includes(colName)) return;
+      if (!requestedLabels.includes(colName)) return;
       if (colName.includes('DR')) {
         let detectionBegin: Date | null = null;
         const segments: Segment[] = [];
@@ -47,7 +47,7 @@ class CSVParser extends Parser {
         let signalStateBegin: Date = convertExcelDateAndFracHourToDate(csvData[1][daycol], csvData[1][timecol]);
         let previousSignalState: string = '3';
         const segments: Segment[] = [];
-        csvData.slice(1).forEach((row, _) => {
+        csvData.slice(1).forEach(row => {
           if (row[colIndex] !== '') {
             const eventDate = convertExcelDateAndFracHourToDate(row[daycol], row[timecol]);
             segments.push({ timeRange: [signalStateBegin, eventDate], val: previousSignalState }); // if there is no data, assume red (used for initialisation)
@@ -58,7 +58,7 @@ class CSVParser extends Parser {
         this.signalData.data.push({ label: colName, data: segments });
       } else if (colName.includes('US')) {
         const segments: Segment[] = [];
-        csvData.slice(1).forEach((row, _) => {
+        csvData.slice(1).forEach(row => {
           if (row[colIndex] === '1') {
             const eventDate = convertExcelDateAndFracHourToDate(row[daycol], row[timecol]);
             const nextSecond = new Date(eventDate);

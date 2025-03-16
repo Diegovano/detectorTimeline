@@ -16,6 +16,7 @@ const TimelineComponent = () => {
         .range(['blue', 'red', 'yellow', 'orange', 'green'])
         .unknown('black');
       chartInstance.current = new TimelinesChart(timelineRef.current)
+        .timeFormat('%Y-%m-%d %-I:%M:%S.%L %p')
         .zQualitative(true)
         .zColorScale(colourScale)
         .enableAnimations(false)

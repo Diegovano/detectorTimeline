@@ -35,6 +35,7 @@
 
 .checkbox {
   padding: 2px;
+  cursor: default;
 }
 
 .columnSelection {

@@ -2,8 +2,8 @@ import { Dispatch, FC, SetStateAction, useEffect } from 'react';
 
 export const Checkbox: FC<{ label: string; state: boolean; onChange: () => void; }> = ({ label, state, onChange }) => {
   return (
-    <div className='checkbox'>
-      <input type="checkbox" checked={state || false} onChange={onChange}/>{label}
+    <div className='checkbox' onClick={onChange}>
+      <input type="checkbox" checked={state || false} readOnly/>{label}
     </div>
   );
 };

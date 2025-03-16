@@ -28,7 +28,7 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
         return;
       }
 
-      setDataLabels(parserRef.current.getAllLabels());
+      setDataLabels(parserRef.current.allLabels);
       // setCheckedIndices(dataLabels.map(() => false));
       // .text().then(string => {});
 

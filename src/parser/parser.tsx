@@ -3,17 +3,26 @@ import { Group } from 'timelines-chart';
 abstract class Parser {
   requestedLabels: string[] = [];
   input: string;
+  private _allLabels?: string[];
+
   detectorData: Group = { group: 'det', data: [] };
   signalData: Group = { group: 'sig', data: [] };
   otherData: Group = { group: 'other', data: [] };
 
+  detectorLabelSubstrings = ['DR'];
+  signalLabelSubstrings = ['SG'];
+
   constructor (input: string) {
     this.input = input;
-    this.requestedLabels = this.getAllLabels();
   }
 
-  abstract getAllLabels(): string[];
-  abstract parse(requestedLabels: string[] | null): Group[];
+  protected abstract extractLabels(): string[];
+  get allLabels () {
+    if (!this._allLabels) this._allLabels = this.extractLabels();
+    return this._allLabels;
+  }
+
+  abstract parse(requestedLabels: string[]): Group[];
 }
 
 export function convertExcelDateAndFracHourToDate (excelDay: string, excelHour: string): Date { // Thanks chatgpt
