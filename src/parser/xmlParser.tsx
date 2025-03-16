@@ -91,7 +91,6 @@ class XMLParser extends Parser {
     this.saxParser.ontext = text => {
       if (insideTimestamp) {
         if (!currentTimestamp) currentTimestamp = text.trim();
-        // else if (!isNaN(currentIndex) && requestedLabels.includes(this.allLabels[currentIndex])) {
         else if (insideValue) {
           const currentIndex = parseInt(currentAttributes?.Index);
           const currentLabel = this.allLabels[currentIndex];
@@ -122,9 +121,13 @@ class XMLParser extends Parser {
     this.saxParser.write(this.input).close();
 
     measurements.forEach(line => {
-      if (this.detectorLabelSubstrings.includes(line.label)) this.detectorData.data.push(line);
-      if (this.signalLabelSubstrings.includes(line.label)) this.signalData.data.push(line);
-      else this.otherData.data.push(line);
+      if (this.detectorLabelSubstrings.some(sub => line.label.includes(sub))) {
+        this.detectorData.data.push(line);
+      } else if (this.signalLabelSubstrings.some(sub => line.label.includes(sub))) {
+        this.signalData.data.push(line);
+      } else {
+        this.otherData.data.push(line);
+      }
     });
 
     return [this.detectorData, this.signalData, this.otherData];
