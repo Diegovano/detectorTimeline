@@ -32,9 +32,7 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
 
       setDataLabels(parserRef.current.allLabelsAndBounds.labels);
       setStartDate(parserRef.current.allLabelsAndBounds.earliestMeasurement);
-      // setStartDate(parserRef.current.allLabelsAndBounds.earliestMeasurement?.toLocaleString('sv').replace(' ', 'T') || '');
       setEndDate(parserRef.current.allLabelsAndBounds.latestMeasurement);
-      // setEndDate(parserRef.current.allLabelsAndBounds.latestMeasurement?.toLocaleString('sv').replace(' ', 'T') || '');
     }
   };
 
