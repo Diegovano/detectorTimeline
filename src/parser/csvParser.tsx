@@ -5,14 +5,26 @@ class CSVParser extends Parser {
   readonly dayColumnName = 'Datum';
   readonly timeColumnName = 'Uhrzeit';
 
-  extractLabels () {
-    const colNames = this.input.split('\n')[0].split(',');
+  _extractLabelsAndDateBounds () {
+    const rows = this.input.split('\n');
+    const colNames = rows[0].split(',');
     const nonDataLabels = ['Datum', 'Uhrzeit', 'Time', 'ms'];
 
-    return colNames.filter(colName => !nonDataLabels.includes(colName));
+    const daycol = colNames.findIndex(colName => colName === this.dayColumnName);
+    if (daycol === -1) throw new Error('Could not find day index');
+    const timecol = colNames.findIndex(colName => colName === this.timeColumnName);
+    if (timecol === -1) throw new Error('Could not find time index');
+
+    const firstRow = rows[1].split(',');
+    const earliestMeasurement = convertExcelDateAndFracHourToDate(firstRow[daycol], firstRow[timecol]);
+
+    const lastRow = rows[rows.length - 2].split(','); // there is an extra newline
+    const latestMeasurement = convertExcelDateAndFracHourToDate(lastRow[daycol], lastRow[timecol]);
+
+    return { labels: colNames.filter(colName => !nonDataLabels.includes(colName)), earliestMeasurement, latestMeasurement };
   }
 
-  parse (requestedLabels: string[] = this.allLabels) {
+  parse (requestedLabels: string[] = this.allLabelsAndBounds.labels) {
     this.detectorData.data = [];
     this.signalData.data = [];
     this.otherData.data = [];
