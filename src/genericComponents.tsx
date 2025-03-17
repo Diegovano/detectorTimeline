@@ -1,4 +1,4 @@
-import { Dispatch, FC, SetStateAction, useEffect } from 'react';
+import { Dispatch, FC, SetStateAction, useEffect, ChangeEventHandler } from 'react';
 
 export const Checkbox: FC<{ label: string; state: boolean; onChange: () => void; }> = ({ label, state, onChange }) => {
   return (
@@ -43,6 +43,34 @@ export const CheckboxList: FC<checkboxListProps> = ({ labels, checkedIndices, se
           <Checkbox label={label} state={checkedIndices[index]} onChange={() => handleCheckboxChange(index)}></Checkbox>
         </div>
       ))}
+    </div>
+  );
+};
+
+interface DateRangeProps {
+  startDate?: Date,
+  setStartDate: Dispatch<SetStateAction<Date | undefined>>,
+  endDate?: Date,
+  setEndDate: Dispatch<SetStateAction<Date | undefined>>
+}
+
+export const DateRangeBoxes: FC<DateRangeProps> = ({ startDate, setStartDate, endDate, setEndDate }) => {
+  const handleStartChange: ChangeEventHandler<HTMLInputElement> = change => {
+    setStartDate(new Date(change.target.value));
+  };
+
+  const handleEndChange: ChangeEventHandler<HTMLInputElement> = change => {
+    setEndDate(new Date(change.target.value));
+  };
+
+  useEffect(() => {
+
+  }, [startDate, endDate]);
+
+  return (
+    <div>
+      <input type="datetime-local" value={startDate?.toLocaleString('sv').replace(' ', 'T') || ''} onChange={handleStartChange}/>
+      <input type="datetime-local" value={endDate?.toLocaleString('sv').replace(' ', 'T') || ''} onChange={handleEndChange}/>
     </div>
   );
 };

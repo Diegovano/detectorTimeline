@@ -1,5 +1,5 @@
 import { ChangeEvent, Dispatch, FC, SetStateAction, useState, useRef } from 'react';
-import { CheckboxList } from './genericComponents';
+import { CheckboxList, DateRangeBoxes } from './genericComponents';
 import { Group } from 'timelines-chart';
 import Parser from './parser/parser';
 import CSVParser from './parser/csvParser';
@@ -9,12 +9,14 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [dataLabels, setDataLabels] = useState<string[]>([]);
   const [checkedIndices, setCheckedIndices] = useState<boolean[]>([]);
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
 
   const parserRef = useRef<Parser | null>(null);
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      // Parse file
+      // inital file parse
       const inputFile = e.target.files[0];
       if (inputFile.name.split('.')[1] === 'csv') {
         const inputText = await inputFile.text();
@@ -28,21 +30,18 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
         return;
       }
 
-      setDataLabels(parserRef.current.allLabels);
-      // setCheckedIndices(dataLabels.map(() => false));
-      // .text().then(string => {});
-
-      // parsedData.then(groups => setData(groups), (err: Error) => {
-      //   setData([]);
-      //   setErrorMessage(err.message);
-      // });
+      setDataLabels(parserRef.current.allLabelsAndBounds.labels);
+      setStartDate(parserRef.current.allLabelsAndBounds.earliestMeasurement);
+      // setStartDate(parserRef.current.allLabelsAndBounds.earliestMeasurement?.toLocaleString('sv').replace(' ', 'T') || '');
+      setEndDate(parserRef.current.allLabelsAndBounds.latestMeasurement);
+      // setEndDate(parserRef.current.allLabelsAndBounds.latestMeasurement?.toLocaleString('sv').replace(' ', 'T') || '');
     }
   };
 
   const visualiseData = () => {
     if (!parserRef.current) return;
     const selectedCategories = dataLabels.filter((_label, index) => checkedIndices[index] === true);
-    const newData = parserRef.current.parse(selectedCategories);
+    const newData = parserRef.current.parse(selectedCategories, startDate, endDate);
     setData(newData);
   };
 
@@ -51,6 +50,7 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
       <div id="uploadAndConfirm">
         <input type="file" accept=".csv,.xml" onChange={handleFileChange}/>
         <span>{data.length > 0 ? 'Valid Data File' : `Invalid Data File: ${errorMessage}`}</span>
+        <DateRangeBoxes startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate}></DateRangeBoxes>
         <input type='button' value='Visualise' onClick={visualiseData}></input>
       </div>
       <CheckboxList labels={dataLabels} checkedIndices={checkedIndices} setCheckedIndices={setCheckedIndices}></CheckboxList>

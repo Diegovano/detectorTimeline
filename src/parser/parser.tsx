@@ -4,10 +4,12 @@ abstract class Parser {
   requestedLabels: string[] = [];
   input: string;
   private _allLabels?: string[];
+  private _earliestMeasurement?: Date;
+  private _latestMeasurement?: Date;
 
   detectorData: Group = { group: 'det', data: [] };
   signalData: Group = { group: 'sig', data: [] };
-  otherData: Group = { group: 'other', data: [] };
+  otherData: Group = { group: 'misc', data: [] };
 
   detectorLabelSubstrings = ['DR'];
   signalLabelSubstrings = ['SG'];
@@ -16,13 +18,14 @@ abstract class Parser {
     this.input = input;
   }
 
-  protected abstract extractLabels(): string[];
-  get allLabels () {
-    if (!this._allLabels) this._allLabels = this.extractLabels();
-    return this._allLabels;
+  protected abstract _extractLabelsAndDateBounds(): { labels: string[], earliestMeasurement?: Date, latestMeasurement?: Date };
+
+  get allLabelsAndBounds (): { labels: string[], earliestMeasurement?: Date, latestMeasurement?: Date } {
+    if (!this._allLabels) ({ labels: this._allLabels, earliestMeasurement: this._earliestMeasurement, latestMeasurement: this._latestMeasurement } = this._extractLabelsAndDateBounds());
+    return { labels: this._allLabels, earliestMeasurement: this._earliestMeasurement, latestMeasurement: this._latestMeasurement };
   }
 
-  abstract parse(requestedLabels: string[]): Group[];
+  abstract parse(requestedLabels: string[], startDate?: Date, endDate?: Date): Group[];
 }
 
 export function convertExcelDateAndFracHourToDate (excelDay: string, excelHour: string): Date { // Thanks chatgpt
