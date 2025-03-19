@@ -46,9 +46,9 @@ export const CheckboxList: FC<checkboxListProps> = ({ labels, mask = new Array<b
     );
   };
   return (
-    <span className='checkboxList'>
-      <CheckboxSelectAllClearAll labels={labels} mask={mask} checkedIndices={checkedIndices} setCheckedIndices={setCheckedIndices}/>
-      <br />
+    <>
+    <CheckboxSelectAllClearAll labels={labels} mask={mask} checkedIndices={checkedIndices} setCheckedIndices={setCheckedIndices}/>
+    <div className='checkboxList'>
       {labels.map((label, index) => {
         if (mask[index]) {
           return (
@@ -56,7 +56,8 @@ export const CheckboxList: FC<checkboxListProps> = ({ labels, mask = new Array<b
           );
         } else return null;
       })}
-    </span>
+    </div>
+    </>
   );
 };
 

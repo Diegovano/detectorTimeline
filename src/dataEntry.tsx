@@ -11,6 +11,8 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
   const [checkedIndices, setCheckedIndices] = useState<boolean[]>([]);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
+  const [categoryVisible, setCategoryVisible] = useState<boolean>(false);
+  const [laneVisible, setLaneVisible] = useState<boolean>(false);
 
   const parserRef = useRef<Parser | null>(null);
 
@@ -66,7 +68,7 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
 
   const detectorFilter = { name: 'DRs', mask: dataLabels.map(label => label.includes('DR')) };
   const signalFilter = { name: 'Signals', mask: dataLabels.map(label => label.includes('SG')) };
-  const redGreenFilter = { name: 'RT and GR', mask: dataLabels.map(label => label.includes('RT') || label.includes('GR')) };
+  // const redGreenFilter = { name: 'RT and GR', mask: dataLabels.map(label => label.includes('RT') || label.includes('GR')) };
 
   const laneLabels = new Map<string, string[]>();
 
@@ -83,41 +85,49 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
     name: laneName, mask: dataLabels.map(label => labelsRelatedToLane.includes(label))
   }));
 
-  const filters: LabelFilter[] = [detectorFilter, signalFilter, redGreenFilter, ...laneFilters];
+  const categoryFilters: LabelFilter[] = [detectorFilter, signalFilter];
 
   // Detemine all the labels which have not shown up in a filter yet
-  const masks = filters.map(filter => filter.mask);
+  const masks = [...categoryFilters, ...laneFilters].map(filter => filter.mask);
   const uncategorisedMask = masks.reduce((accuMask, mask) => accuMask.map((A, i) => A && !mask[i]), new Array<boolean>(dataLabels.length).fill(true));
   const uncategorisedFilter: LabelFilter = { name: 'Uncategorised', mask: uncategorisedMask };
 
   const labelProps = { labels: dataLabels, checkedIndices, setCheckedIndices };
 
+  function getCheckboxListFromFilter (filters: LabelFilter[]) {
+    return (filters.map((filter, index) => {
+      // if mask is fully false, no point displaying the filter
+      if (filter.mask.every(b => !b)) return null;
+      else return (<div key={index}>{filter.name}: <CheckboxList mask={filter.mask} {...labelProps}/></div>);
+    }));
+  }
+
   return (
     <div className="dataEntry">
      <div className="fileUpload">
-        <span>Select Data File: </span>
+        <h3>Select Data File: </h3>
         <div>
           <input type="file" accept=".csv,.xml" onChange={handleFileChange}/>
         </div>
       </div>
       <div>
-        <span>Select Date and Time Range to Visualise: </span>
+        <h3>Select Date and Time Range to Visualise: </h3>
         <div>
           <input type="button" value="Reset" onClick={resetStartAndEndDates}/>
           <DateRangeBoxes userEditable={parserRef.current?.supportsDateFiltering ?? false} startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate}/>
         </div>
       </div>
       <div id="checkboxSelect">
-        <span>Select Data to Visualise: </span>
+        <h3>Select Data to Visualise: </h3>
         <div>All: <CheckboxSelectAllClearAll {...labelProps}/></div>
-        {[...filters, uncategorisedFilter].map((filter, index) => {
-          // if mask is fully false, no point displaying the filter
-          if (filter.mask.every(b => !b)) return null;
-          else return (<div key={index}>{filter.name}: <CheckboxList mask={filter.mask} {...labelProps}/></div>);
-        })}
+        <h4 className="collapseMenu" onClick={() => setCategoryVisible(state => !state)}>&gt; Select Category</h4>
+        {categoryVisible && getCheckboxListFromFilter(categoryFilters)}
+          <h4 className="collapseMenu" onClick={() => setLaneVisible(state => !state)}>&gt; Select Lane</h4>
+        {laneVisible && getCheckboxListFromFilter(laneFilters)}
+        {getCheckboxListFromFilter([uncategorisedFilter])}
       </div>
       <input type='button' value='Visualise' onClick={visualiseData}/>
-      <span>{data.length > 0 ? 'Valid Data Parsed' : `No Data Parsed: ${errorMessage ?? ''}`}</span>
+      <span>Status Message: {data.length > 0 ? 'Valid Data Parsed' : `No Data Parsed: ${errorMessage ?? ''}`}</span>
     </div>
   );
 };
