@@ -18,7 +18,7 @@ class XMLParser extends Parser {
   saxParser;
 
   constructor (input: string) {
-    super(input);
+    super(input, true);
 
     this.saxParser = parser(true);
   }
@@ -88,64 +88,73 @@ class XMLParser extends Parser {
     return { labels: dataLabels.map(labelDetails => labelDetails.ShortText), earliestMeasurement: new Date(earliestTime), latestMeasurement: new Date(latestTime) };
   }
 
+  private checkTimestampBounds (candidate: Date, startDate?: Date, endDate?: Date) {
+    const candidateTime = candidate.getTime();
+    const startTime = startDate?.getTime() ?? Number.NEGATIVE_INFINITY;
+    const endTime = endDate?.getTime() ?? Number.POSITIVE_INFINITY;
+
+    return { afterStart: candidateTime >= startTime, beforeEnd: candidateTime <= endTime };
+  }
+
   parse (requestedLabels: string[] = this.allLabelsAndBounds.labels, startDate?: Date, endDate?: Date): Group[] {
     this.detectorData.data = [];
     this.signalData.data = [];
     this.otherData.data = [];
 
-    let inBoundMeasurementTimestamp: Date | null = null;
-    let debugTimestamp: Date | null = null;
+    let afterStart = false;
+    let beforeEnd = false;
+    let timestamp: Date | null = null;
 
     const measurements: Line[] = requestedLabels.map(label => ({ label, data: [] }));
     const previousMeasurements: Map<number, { timestamp: Date; value: string }> = new Map();
 
     this.saxParser.onopentag = tag => {
       if (tag.name === 'Timestamp') {
-        this.saxParser.ontext = timestamp => {
-          const candidateTimestamp = new Date(timestamp.trim());
-          const candidateTime = candidateTimestamp.getTime();
-          const startTime = startDate?.getTime() ?? Number.NEGATIVE_INFINITY;
-          const endTime = endDate?.getTime() ?? Number.POSITIVE_INFINITY;
-
-          if (candidateTime >= startTime && candidateTime <= endTime) inBoundMeasurementTimestamp = candidateTimestamp;
-          else debugTimestamp = candidateTimestamp;
+        this.saxParser.ontext = timestampText => {
+          timestamp = new Date(timestampText.trim());
+          ({ afterStart, beforeEnd } = this.checkTimestampBounds(timestamp, startDate, endDate));
         };
       } else if (tag.name === 'Value') {
-        if (inBoundMeasurementTimestamp) {
-          const currentAttributes = tag.attributes as { [key: string]: string };
+        const currentAttributes = tag.attributes as { [key: string]: string };
 
-          const currentIndex = parseInt(currentAttributes?.Index);
-          if (isNaN(currentIndex)) throw new Error('No index in timestamp tag, cannot determine event type');
+        const currentIndex = parseInt(currentAttributes?.Index);
+        if (isNaN(currentIndex)) throw new Error('No index in timestamp tag, cannot determine event type');
 
-          this.saxParser.ontext = value => {
-            if (!inBoundMeasurementTimestamp) throw new Error('Timestamp blank');
-            const currentLabel = this.allLabelsAndBounds.labels[currentIndex];
+        const currentLabel = this.allLabelsAndBounds.labels[currentIndex];
 
-            if (requestedLabels.includes(currentLabel)) {
-              const previousMeasurement = previousMeasurements.get(currentIndex);
-              previousMeasurements.set(currentIndex, { timestamp: inBoundMeasurementTimestamp, value: value.trim() });
-              if (previousMeasurement && previousMeasurement.value !== '0') {
-                measurements.find(line =>
-                  line.label === this.allLabelsAndBounds.labels[currentIndex])?.data.push(
-                  { timeRange: [new Date(previousMeasurement.timestamp), new Date(inBoundMeasurementTimestamp)], val: previousMeasurement.value });
-              }
+        this.saxParser.ontext = value => {
+          if (requestedLabels.includes(currentLabel)) {
+            if (!timestamp) throw new Error('Timestamp blank');
+            const previousMeasurement = previousMeasurements.get(currentIndex);
+            if (beforeEnd) {
+              const measurementStart = startDate
+                // if the value starts before the start date, then we need to pretend it started on the start date to include the data
+                ? new Date(Math.max(timestamp.getTime(), startDate.getTime()))
+                : timestamp;
+              previousMeasurements.set(currentIndex, { timestamp: measurementStart, value: value.trim() });
             }
-          };
-        } else {
-          const currentAttributes = tag.attributes as { [key: string]: string };
-          const currentIndex = parseInt(currentAttributes?.Index);
-          if (isNaN(currentIndex)) throw new Error('No index in timestamp tag, cannot determine event type');
-          console.log(`Skipped Measurement ${this.allLabelsAndBounds.labels[currentIndex]}: at time ${debugTimestamp}`);
-        }
-      }
+            if (previousMeasurement && previousMeasurement.value !== '0') {
+              if (afterStart && beforeEnd) {
+                measurements.find(line => line.label === currentLabel)?.data.push(
+                  { timeRange: [previousMeasurement.timestamp, timestamp], val: previousMeasurement.value }
+                );
+              } else console.log(`Skipped Measurement of ${currentLabel} at ${timestamp.toISOString()}, value: ${value}`);
+            }
+          } else {
+            console.log(`Skipped unselected label ${currentLabel}`);
+          }
+        };
+      };
     };
 
     this.saxParser.onclosetag = tagName => {
       if (tagName === 'Timestamp') {
-        this.saxParser.ontext = _ => {}; // remove text callback, we need a tag next
-        inBoundMeasurementTimestamp = null;
+        this.saxParser.ontext = () => {}; // remove text callback, we need a tag next
+        afterStart = false;
+        beforeEnd = false;
+        timestamp = null;
       } else if (tagName === 'Value') {
-        this.saxParser.ontext = _ => {};
+        this.saxParser.ontext = () => {};
       }
     };
 

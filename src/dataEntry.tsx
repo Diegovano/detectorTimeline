@@ -48,7 +48,7 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
       <div id="uploadAndConfirm">
         <input type="file" accept=".csv,.xml" onChange={handleFileChange}/>
         <span>{data.length > 0 ? 'Valid Data File' : `Invalid Data File: ${errorMessage}`}</span>
-        <DateRangeBoxes startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate}></DateRangeBoxes>
+        <DateRangeBoxes userEditable={parserRef.current?.supportsDateFiltering ?? false} startDate={startDate} setStartDate={setStartDate} endDate={endDate} setEndDate={setEndDate}></DateRangeBoxes>
         <input type='button' value='Visualise' onClick={visualiseData}></input>
       </div>
       <CheckboxList labels={dataLabels} checkedIndices={checkedIndices} setCheckedIndices={setCheckedIndices}></CheckboxList>

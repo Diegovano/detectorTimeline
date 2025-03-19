@@ -7,6 +7,8 @@ abstract class Parser {
   private _earliestMeasurement?: Date;
   private _latestMeasurement?: Date;
 
+  supportsDateFiltering: boolean;
+
   detectorData: Group = { group: 'det', data: [] };
   signalData: Group = { group: 'sig', data: [] };
   otherData: Group = { group: 'misc', data: [] };
@@ -14,8 +16,9 @@ abstract class Parser {
   detectorLabelSubstrings = ['DR'];
   signalLabelSubstrings = ['SG'];
 
-  constructor (input: string) {
+  constructor (input: string, supportsDateFiltering: boolean) {
     this.input = input;
+    this.supportsDateFiltering = supportsDateFiltering;
   }
 
   protected abstract _extractLabelsAndDateBounds(): { labels: string[], earliestMeasurement?: Date, latestMeasurement?: Date };

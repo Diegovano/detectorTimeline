@@ -5,6 +5,10 @@ class CSVParser extends Parser {
   readonly dayColumnName = 'Datum';
   readonly timeColumnName = 'Uhrzeit';
 
+  constructor (input: string) {
+    super(input, false);
+  }
+
   _extractLabelsAndDateBounds () {
     const rows = this.input.split('\n');
     const colNames = rows[0].split(',');

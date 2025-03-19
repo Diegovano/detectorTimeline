@@ -38,6 +38,10 @@
   cursor: default;
 }
 
+input:disabled {
+  cursor: not-allowed;
+}
+
 .columnSelection {
   display: grid;
   flex: 1;

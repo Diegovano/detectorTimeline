@@ -48,13 +48,14 @@ export const CheckboxList: FC<checkboxListProps> = ({ labels, checkedIndices, se
 };
 
 interface DateRangeProps {
+  userEditable: boolean;
   startDate?: Date,
   setStartDate: Dispatch<SetStateAction<Date | undefined>>,
   endDate?: Date,
   setEndDate: Dispatch<SetStateAction<Date | undefined>>
 }
 
-export const DateRangeBoxes: FC<DateRangeProps> = ({ startDate, setStartDate, endDate, setEndDate }) => {
+export const DateRangeBoxes: FC<DateRangeProps> = ({ userEditable, startDate, setStartDate, endDate, setEndDate }) => {
   const handleStartChange: ChangeEventHandler<HTMLInputElement> = change => {
     setStartDate(new Date(change.target.value));
   };
@@ -63,14 +64,10 @@ export const DateRangeBoxes: FC<DateRangeProps> = ({ startDate, setStartDate, en
     setEndDate(new Date(change.target.value));
   };
 
-  useEffect(() => {
-
-  }, [startDate, endDate]);
-
   return (
     <div>
-      <input type="datetime-local" value={startDate?.toLocaleString('sv').replace(' ', 'T') || ''} onChange={handleStartChange}/>
-      <input type="datetime-local" value={endDate?.toLocaleString('sv').replace(' ', 'T') || ''} onChange={handleEndChange}/>
+      <input type="datetime-local" step='1' disabled={!userEditable} value={startDate?.toLocaleString('sv').replace(' ', 'T') || ''} onChange={handleStartChange}/>
+      <input type="datetime-local" step='1' disabled={!userEditable} value={endDate?.toLocaleString('sv').replace(' ', 'T') || ''} onChange={handleEndChange}/>
     </div>
   );
 };
