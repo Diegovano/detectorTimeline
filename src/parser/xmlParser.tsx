@@ -138,10 +138,12 @@ class XMLParser extends Parser {
                 measurements.find(line => line.label === currentLabel)?.data.push(
                   { timeRange: [previousMeasurement.timestamp, timestamp], val: previousMeasurement.value }
                 );
-              } else console.log(`Skipped Measurement of ${currentLabel} at ${timestamp.toISOString()}, value: ${value}`);
+              } else {
+                // console.log(`Skipped Measurement of ${currentLabel} at ${timestamp.toISOString()}, value: ${value}`);
+              }
             }
           } else {
-            console.log(`Skipped unselected label ${currentLabel}`);
+            // console.log(`Skipped unselected label ${currentLabel}`);
           }
         };
       };

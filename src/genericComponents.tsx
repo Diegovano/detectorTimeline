@@ -2,32 +2,43 @@ import { Dispatch, FC, SetStateAction, useEffect, ChangeEventHandler } from 'rea
 
 export const Checkbox: FC<{ label: string; state: boolean; onChange: () => void; }> = ({ label, state, onChange }) => {
   return (
-    <div className='checkbox' onClick={onChange}>
+    <span className='checkbox' onClick={onChange}>
       <input type="checkbox" checked={state || false} readOnly/>{label}
-    </div>
+    </span>
   );
 };
 
 interface checkboxListProps {
   labels: string[];
+  mask?: boolean[];
   checkedIndices: boolean[];
   setCheckedIndices: Dispatch<SetStateAction<boolean[]>>;
 }
 
-export const CheckboxList: FC<checkboxListProps> = ({ labels, checkedIndices, setCheckedIndices }) => {
+export const CheckboxSelectAllClearAll: FC<checkboxListProps> = ({ labels, mask = new Array<boolean>(labels.length).fill(true), checkedIndices, setCheckedIndices }) => {
+  const handleSelectAll = () => {
+    if (mask.length !== labels.length) throw new Error('Mask dimension mismatch');
+    setCheckedIndices(checkedIndices.map((value, index) => mask[index] ? true : value));
+  };
+
+  const handleClearSelection = () => {
+    if (mask.length !== labels.length) throw new Error('Mask dimension mismatch');
+    setCheckedIndices(checkedIndices.map((value, index) => mask[index] ? false : value));
+  };
+  return (
+    <>
+      <input type='button' value='Select All' onClick={handleSelectAll}/>
+      <input type='button' value='Clear Selection' onClick={handleClearSelection}/>
+    </>
+  );
+};
+
+export const CheckboxList: FC<checkboxListProps> = ({ labels, mask = new Array<boolean>(labels.length).fill(true), checkedIndices, setCheckedIndices }) => {
   useEffect(() => {
     if (checkedIndices.length !== labels.length) {
       setCheckedIndices(labels.map(() => false));
     }
   }, [labels, checkedIndices, setCheckedIndices]);
-
-  const handleSelectAll = () => {
-    setCheckedIndices(() => new Array(labels.length).fill(true));
-  };
-
-  const handleClearSelection = () => {
-    setCheckedIndices(() => new Array(labels.length).fill(false));
-  };
 
   const handleCheckboxChange = (index: number) => {
     setCheckedIndices((prev) =>
@@ -35,15 +46,17 @@ export const CheckboxList: FC<checkboxListProps> = ({ labels, checkedIndices, se
     );
   };
   return (
-    <div className='columnSelection'>
-      <input type='button' value='Select All' onClick={handleSelectAll}/>
-      <input type='button' value='Clear Selection' onClick={handleClearSelection}/>
-      {labels.map((label, index) => (
-        <div key={index} className="columnSelectionCheckbox">
-          <Checkbox label={label} state={checkedIndices[index]} onChange={() => handleCheckboxChange(index)}></Checkbox>
-        </div>
-      ))}
-    </div>
+    <span className='checkboxList'>
+      <CheckboxSelectAllClearAll labels={labels} mask={mask} checkedIndices={checkedIndices} setCheckedIndices={setCheckedIndices}/>
+      <br />
+      {labels.map((label, index) => {
+        if (mask[index]) {
+          return (
+            <Checkbox key={index} label={label} state={checkedIndices[index]} onChange={() => handleCheckboxChange(index)}></Checkbox>
+          );
+        } else return null;
+      })}
+    </span>
   );
 };
 
@@ -65,9 +78,9 @@ export const DateRangeBoxes: FC<DateRangeProps> = ({ userEditable, startDate, se
   };
 
   return (
-    <div>
+    <span>
       <input type="datetime-local" step='1' disabled={!userEditable} value={startDate?.toLocaleString('sv').replace(' ', 'T') || ''} onChange={handleStartChange}/>
       <input type="datetime-local" step='1' disabled={!userEditable} value={endDate?.toLocaleString('sv').replace(' ', 'T') || ''} onChange={handleEndChange}/>
-    </div>
+    </span>
   );
 };

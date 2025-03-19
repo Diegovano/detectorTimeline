@@ -10,6 +10,10 @@
   text-align: center;
 }
 
+html, body {
+  /* overflow-x: hidden; */
+}
+
 #content {
   width: 100%;
   display: flex;
@@ -18,9 +22,10 @@
   /* border: 1px solid red; */
 }
 
-#fileUpload {
+.dataEntry {
   display: flex;
   justify-content: stretch;
+  flex-direction: column;
   padding: 0 25px 25px;
 }
 
@@ -42,12 +47,16 @@ input:disabled {
   cursor: not-allowed;
 }
 
-.columnSelection {
-  display: grid;
-  flex: 1;
-  grid-template-columns: 1fr 1fr 1fr;
-  justify-content: center;
+#checkboxSelect > * {
+  width: 100%;
+  overflow: scroll;
 }
- .columnSelection > * {
-  border: 1px black solid;
- }
+
+.checkboxList {
+  white-space: normal;
+  overflow: auto;
+}
+
+.checkbox {
+  /* white-space: nowrap; */
+}
