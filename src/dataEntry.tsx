@@ -11,8 +11,8 @@ const SignalDataImportComponent: FC<{data: Group[]; setData: Dispatch<SetStateAc
   const [checkedIndices, setCheckedIndices] = useState<boolean[]>([]);
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
-  const [categoryVisible, setCategoryVisible] = useState<boolean>(false);
-  const [laneVisible, setLaneVisible] = useState<boolean>(false);
+  const [categoryVisible, setCategoryVisible] = useState<boolean>(true);
+  const [laneVisible, setLaneVisible] = useState<boolean>(true);
 
   const parserRef = useRef<Parser | null>(null);
 
