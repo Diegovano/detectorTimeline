@@ -85,3 +85,28 @@ export const DateRangeBoxes: FC<DateRangeProps> = ({ userEditable, startDate, se
     </span>
   );
 };
+
+interface TimestampRangeProps {
+  userEditable: boolean;
+  startTimestamp?: number,
+  setStartTimestamp: Dispatch<SetStateAction<number | undefined>>,
+  endTimestamp?: number,
+  setEndTimestamp: Dispatch<SetStateAction<number | undefined>>
+}
+
+export const TimestampRangeBoxes: FC<TimestampRangeProps> = ({ userEditable, startTimestamp, setStartTimestamp, endTimestamp, setEndTimestamp }) => {
+  const handleStartChange: ChangeEventHandler<HTMLInputElement> = change => {
+    setStartTimestamp(parseInt(change.target.value));
+  };
+
+  const handleEndChange: ChangeEventHandler<HTMLInputElement> = change => {
+    setEndTimestamp(parseInt(change.target.value));
+  };
+
+  return (
+    <span>
+      <input type="number" disabled={!userEditable} value={startTimestamp ?? ''} onChange={handleStartChange}/>
+      <input type="number" disabled={!userEditable} value={endTimestamp ?? ''} onChange={handleEndChange}/>
+    </span>
+  );
+};

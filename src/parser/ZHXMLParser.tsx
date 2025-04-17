@@ -14,7 +14,7 @@ interface DataSourceType {
   Bit: string;
 }
 
-class XMLParser extends Parser {
+export default class ZHXMLParser extends Parser {
   saxParser;
 
   constructor (input: string) {
@@ -191,5 +191,3 @@ class XMLParser extends Parser {
     return [this.detectorData, this.signalData, this.otherData];
   }
 }
-
-export default XMLParser;

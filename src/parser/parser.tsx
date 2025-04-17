@@ -4,8 +4,8 @@ abstract class Parser {
   requestedLabels: string[] = [];
   input: string;
   private _allLabels?: string[];
-  private _earliestMeasurement?: Date;
-  private _latestMeasurement?: Date;
+  private _earliestMeasurement?: Date | number;
+  private _latestMeasurement?: Date | number;
 
   supportsDateFiltering: boolean;
 
@@ -21,14 +21,14 @@ abstract class Parser {
     this.supportsDateFiltering = supportsDateFiltering;
   }
 
-  protected abstract _extractLabelsAndDateBounds(): { labels: string[], earliestMeasurement?: Date, latestMeasurement?: Date };
+  protected abstract _extractLabelsAndDateBounds(): { labels: string[], earliestMeasurement?: Date | number, latestMeasurement?: Date | number };
 
-  get allLabelsAndBounds (): { labels: string[], earliestMeasurement?: Date, latestMeasurement?: Date } {
+  get allLabelsAndBounds (): { labels: string[], earliestMeasurement?: Date | number, latestMeasurement?: Date | number } {
     if (!this._allLabels) ({ labels: this._allLabels, earliestMeasurement: this._earliestMeasurement, latestMeasurement: this._latestMeasurement } = this._extractLabelsAndDateBounds());
     return { labels: this._allLabels, earliestMeasurement: this._earliestMeasurement, latestMeasurement: this._latestMeasurement };
   }
 
-  abstract parse(requestedLabels: string[], startDate?: Date, endDate?: Date): Group[];
+  abstract parse(requestedLabels: string[], startMeasurement?: Date | number, endMeasurement?: Date | number): Group[];
 }
 
 export function convertExcelDateAndFracHourToDate (excelDay: string, excelHour: string): Date { // Thanks chatgpt
