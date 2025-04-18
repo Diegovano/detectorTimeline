@@ -34,8 +34,7 @@ export default class SUMOXMLParser extends Parser {
 
     this.saxParser.write(this.input).close();
 
-    if (longestStateString > 0) return { labels: Array.from({ length: longestStateString }, (_, i) => i.toString()), earliestMeasurement, latestMeasurement };
-    else return { labels: Array.from(iLoopNames), earliestMeasurement, latestMeasurement };
+    return { labels: [...Array.from(iLoopNames), ...Array.from({ length: longestStateString }, (_, i) => i.toString())], earliestMeasurement, latestMeasurement };
   }
 
   private checkTimestampBounds (candidate: number, startTimestamp?: number, endTimestamp?: number) {
@@ -46,7 +45,6 @@ export default class SUMOXMLParser extends Parser {
   }
 
   private processEvent (label: string, value: string, processEventParams: { requestedLabels: string[], measurements: Line[], previousMeasurements: previousMeasurementType, time: number, startTimestamp?: number, endTimestamp?: number }) {
-    // const currentLabel = this.allLabelsAndBounds.labels[index];
     const { requestedLabels, measurements, previousMeasurements, time, startTimestamp, endTimestamp } = processEventParams;
 
     const currentLabel = label;
@@ -75,8 +73,6 @@ export default class SUMOXMLParser extends Parser {
     this.signalData.data = [];
     this.otherData.data = [];
 
-    // const requestedStateIndices = requestedLabels.map(x => parseInt(x));
-
     let attributes: { [key: string]: string } | null = null;
 
     const measurements: Line[] = requestedLabels.map(label => ({ label, data: [] }));
@@ -93,7 +89,7 @@ export default class SUMOXMLParser extends Parser {
 
           if (tag.name === 'tlsState') {
             attributes.state.split('').forEach((tlsState, index) => {
-              this.processEvent(this.allLabelsAndBounds.labels[index], tlsState, processEventParams);
+              this.processEvent(index.toString(), tlsState, processEventParams);
             });
           } else if (tag.name === 'instantOut') {
             if (attributes.state === 'enter') this.processEvent(attributes.id, '1', processEventParams);
