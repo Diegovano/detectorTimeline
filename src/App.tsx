@@ -27,10 +27,10 @@ const TimelineComponent = () => {
     const colourScale = scaleOrdinal<Val, string>()
       .domain(timeFormat === 'date'
         ? ['1', '3', '12', '15', '48']
-        : ['r', 'y', 'G', 'g'])
+        : ['1', 'r', 'y', 'G', 'g'])
       .range(timeFormat === 'date'
         ? ['blue', 'red', 'yellow', 'orange', 'green']
-        : ['red', 'yellow', 'lime', 'green'])
+        : ['blue', 'red', 'yellow', 'lime', 'green'])
       .unknown('black');
 
     if (timelineRef.current && !chartInstance.current) chartInstance.current = new TimelinesChart(timelineRef.current);

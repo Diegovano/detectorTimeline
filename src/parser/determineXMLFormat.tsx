@@ -6,7 +6,8 @@ const saxParser = parser(true);
 
 let tagNames: string[] = [];
 
-const sumoXMLTags = ['tlsStates', 'tlsState'];
+const sumoTLSXMLTags = ['tlsStates', 'tlsState'];
+const sumoILoopXMLTags = ['instantE1', 'instantOut'];
 const ZHXMLTags = ['Element', 'Timestamp', 'Value'];
 
 saxParser.onopentag = tag => {
@@ -18,7 +19,7 @@ export default function determineXMLFormat (input: string): XMLFormatType | null
 
   saxParser.write(input).close();
 
-  const looksLikeSUMO = tagNames.filter(tagName => sumoXMLTags.includes(tagName)).length > 0;
+  const looksLikeSUMO = tagNames.filter(tagName => sumoTLSXMLTags.includes(tagName)).length > 0 || tagNames.filter(tagName => sumoILoopXMLTags.includes(tagName)).length > 0;
   const looksLikeZH = tagNames.filter(tagName => ZHXMLTags.includes(tagName)).length > 0;
 
   if (looksLikeSUMO && looksLikeZH) return null;

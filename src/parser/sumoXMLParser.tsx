@@ -2,13 +2,7 @@ import { Group, Line } from 'timelines-chart';
 import Parser from './parser';
 import { parser } from 'sax';
 
-// interface tlsStateType {
-//   time: string;
-//   id: string;
-//   programID: string;
-//   phase: string;
-//   state: string;
-// }
+type previousMeasurementType = Map<number, { timestamp: number, value: string }>;
 
 export default class SUMOXMLParser extends Parser {
   saxParser;
@@ -21,24 +15,27 @@ export default class SUMOXMLParser extends Parser {
   _extractLabelsAndDateBounds () {
     let earliestMeasurement = Number.POSITIVE_INFINITY;
     let latestMeasurement = Number.NEGATIVE_INFINITY;
-    let tlsStateAttributes = null;
+    let attributes = null;
     let longestStateString = 0;
+    const iLoopNames = new Set<string>();
 
     this.saxParser.onopentag = tag => {
-      if (tag.name === 'tlsState') {
-        tlsStateAttributes = tag.attributes as { [key: string]: string };
+      if (tag.name === 'tlsState' || tag.name === 'instantOut') {
+        attributes = tag.attributes as { [key: string]: string };
 
-        const eventTimestamp = parseFloat(tlsStateAttributes?.time);
+        const eventTimestamp = parseFloat(attributes?.time);
         if (eventTimestamp < earliestMeasurement) earliestMeasurement = eventTimestamp;
         if (eventTimestamp > latestMeasurement) latestMeasurement = eventTimestamp;
 
-        if (tlsStateAttributes?.state.length > longestStateString) longestStateString = tlsStateAttributes?.state.length;
+        if (tag.name === 'tlsState' && attributes?.state.length > longestStateString) longestStateString = attributes?.state.length;
+        if (tag.name === 'instantOut' && attributes?.id) iLoopNames.add(attributes.id);
       }
     };
 
     this.saxParser.write(this.input).close();
 
-    return { labels: Array.from({ length: longestStateString }, (_, i) => i.toString()), earliestMeasurement, latestMeasurement };
+    if (longestStateString > 0) return { labels: Array.from({ length: longestStateString }, (_, i) => i.toString()), earliestMeasurement, latestMeasurement };
+    else return { labels: Array.from(iLoopNames), earliestMeasurement, latestMeasurement };
   }
 
   private checkTimestampBounds (candidate: number, startTimestamp?: number, endTimestamp?: number) {
@@ -48,47 +45,60 @@ export default class SUMOXMLParser extends Parser {
     return { afterStart: candidate >= startTime, beforeEnd: candidate <= endTime };
   }
 
+  private processEvent (label: string, value: string, processEventParams: { requestedLabels: string[], measurements: Line[], previousMeasurements: previousMeasurementType, time: number, startTimestamp?: number, endTimestamp?: number }) {
+    // const currentLabel = this.allLabelsAndBounds.labels[index];
+    const { requestedLabels, measurements, previousMeasurements, time, startTimestamp, endTimestamp } = processEventParams;
+
+    const currentLabel = label;
+    const labelIndex = requestedLabels.findIndex(rLabel => rLabel === label);
+
+    if (labelIndex !== -1) {
+      const { afterStart, beforeEnd } = this.checkTimestampBounds(time, startTimestamp, endTimestamp);
+
+      const previousMeasurement = previousMeasurements.get(labelIndex);
+      if (beforeEnd) {
+        const measurementStart = startTimestamp ? Math.max(time, startTimestamp) : time;
+        previousMeasurements.set(labelIndex, { timestamp: measurementStart, value });
+      }
+      if (previousMeasurement && previousMeasurement.value !== '0') {
+        if (afterStart && beforeEnd) {
+          measurements.find(line => line.label === currentLabel)?.data.push(
+            { timeRange: [previousMeasurement.timestamp, time], val: previousMeasurement.value }
+          );
+        }
+      };
+    }
+  }
+
   parse (requestedLabels: string[] = this.allLabelsAndBounds.labels, startTimestamp?: number, endTimestamp?: number): Group[] {
     this.detectorData.data = [];
     this.signalData.data = [];
     this.otherData.data = [];
 
-    let afterStart = false;
-    let beforeEnd = false;
+    // const requestedStateIndices = requestedLabels.map(x => parseInt(x));
 
-    const requestedStateIndices = requestedLabels.map(x => parseInt(x));
-
-    let tlsStateAttributes: { [key: string]: string } | null = null;
+    let attributes: { [key: string]: string } | null = null;
 
     const measurements: Line[] = requestedLabels.map(label => ({ label, data: [] }));
-    const previousMeasurements: Map<number, { timestamp: number, value: string }> = new Map();
+    const previousMeasurements: previousMeasurementType = new Map();
 
     this.saxParser.onopentag = tag => {
-      if (tag.name === 'tlsState') {
-        tlsStateAttributes = tag.attributes as { [key: string]: string };
+      if (tag.name === 'tlsState' || tag.name === 'instantOut') {
+        attributes = tag.attributes as { [key: string]: string };
 
-        if (tlsStateAttributes.time) {
-          const time = parseInt(tlsStateAttributes.time);
-          tlsStateAttributes.state.split('').forEach((tlsState, index) => {
-            const currentLabel = this.allLabelsAndBounds.labels[index];
+        if (attributes?.time) {
+          const time = parseInt(attributes.time);
 
-            if (requestedStateIndices.includes(index) && tlsStateAttributes) {
-              ({ afterStart, beforeEnd } = this.checkTimestampBounds(time, startTimestamp, endTimestamp));
+          const processEventParams = { requestedLabels, measurements, previousMeasurements, time, startTimestamp, endTimestamp };
 
-              const previousMeasurement = previousMeasurements.get(index);
-              if (beforeEnd) {
-                const measurementStart = startTimestamp ? Math.max(time, startTimestamp) : time;
-                previousMeasurements.set(index, { timestamp: measurementStart, value: tlsState });
-              }
-              if (previousMeasurement) {
-                if (afterStart && beforeEnd) {
-                  measurements.find(line => line.label === currentLabel)?.data.push(
-                    { timeRange: [previousMeasurement.timestamp, time], val: previousMeasurement.value }
-                  );
-                }
-              };
-            }
-          });
+          if (tag.name === 'tlsState') {
+            attributes.state.split('').forEach((tlsState, index) => {
+              this.processEvent(this.allLabelsAndBounds.labels[index], tlsState, processEventParams);
+            });
+          } else if (tag.name === 'instantOut') {
+            if (attributes.state === 'enter') this.processEvent(attributes.id, '1', processEventParams);
+            else if (attributes.state === 'leave') this.processEvent(attributes.id, '0', processEventParams);
+          }
         }
       }
     };
@@ -97,6 +107,7 @@ export default class SUMOXMLParser extends Parser {
 
     if (endTimestamp) {
       previousMeasurements.forEach((previousMeasurements, labelIndex) => {
+        if (previousMeasurements.value === '0') return;
         measurements.find(line =>
           line.label === this.allLabelsAndBounds.labels[labelIndex])?.data.push(
           { timeRange: [previousMeasurements.timestamp, endTimestamp], val: previousMeasurements.value });
